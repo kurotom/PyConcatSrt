@@ -30,9 +30,5 @@ Un timestamp
 
 
 7
-00:00:16,000 --> 00:00:15,000
+00:00:11,000 --> 00:00:13,000
 Mal formato
-
-8
-00:00:18,000 --> 00:00:25,000
-Sin espacio entre timestamps
