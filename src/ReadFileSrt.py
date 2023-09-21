@@ -23,23 +23,22 @@ class ReadSrt(object):
 
         for i in range(len(self.lines)):
             line = self.lines[i]
-            if '-->' in line:
-                regex = self.__get_timestamps(line)
-                if regex != []:
-                    time_tuple = regex[0]
-                    if self.__validate_timestamp(time_tuple):
-                        self.current = self.__getIndex(i)
+            # if '-->' in line:
+            regex = self.__get_timestamps(line)
+            if regex != []:
+                time_tuple = regex[0]
+                if self.__validate_timestamp(time_tuple):
+                    self.current = self.__getIndex(i)
+                    scriptOBJ = Dialog(
+                                timestamp_start=time_tuple[0],
+                                timestamp_end=time_tuple[1]
+                            )
+                    scriptOBJ.setPosition(self.__getIndex(i))
+                    scriptOBJ.setDialogs(self.__getLines(i + 1))
 
-                        scriptOBJ = Dialog(
-                                    timestamp_start=time_tuple[0],
-                                    timestamp_end=time_tuple[1]
-                                )
-                        scriptOBJ.setPosition(self.__getIndex(i))
-                        scriptOBJ.setDialogs(self.__getLines(i + 1))
-
-                        self.dialogsOBJ.append(scriptOBJ)
-                    else:
-                        self.error_lines.append(self.current)
+                    self.dialogsOBJ.append(scriptOBJ)
+                else:
+                    self.error_lines.append(self.current)
 
         return {
             'data': self.dialogsOBJ,
