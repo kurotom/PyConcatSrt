@@ -14,46 +14,21 @@ class Control(object):
         self.data = []
         self.errors_data = []
         self.writer = WriterSrt()
-        # self.data = self.reader.process()
 
     def setPath(self, path):
         if os.path.exists(path):
             self.path = os.path.realpath(path)
 
-    def read(self):
-        if self.path is not None:
-            errs = []
-            if os.path.isfile(self.path):
-                self.data = self.__getData(self.path)
-                if self.data['error'] != []:
-                    derr = {
-                            'filename': os.path.basename(self.path),
-                            'errors': self.data['error']
-                        }
-                errs.append(derr)
-            elif os.path.isdir(self.path):
-                for file in os.listdir(self.path):
-                    if file.endswith('srt'):
-                        file_path = self.path + f'/{file}'
-                        if os.path.exists(file_path):
-                            data = self.__getData(file_path)
-                            if data['error'] != []:
-                                derr = {
-                                        'filename': os.path.basename(file),
-                                        'errors': data['error']
-                                    }
-                                errs.append(derr)
-                            if data['data'] != []:
-                                self.data += data['data']
-            self.errors_data = errs
-            if len(self.data) > 1:
-                self.data = self.__sort_data()
-            else:
-                return self.data
 
-    def __getData(self, file) -> dict:
-        reader = ReaderSrt(file)
-        return reader.process()
+    def read(self, path=None) -> list:
+        r = []
+        if path is not None:
+            reader = ReaderSrt(path)
+            for item in reader.process():
+                # dict_keys(['file', 'data', 'errors'])
+                x = self.convertData(item['data'])
+                r.append(x)
+        return r
 
     def __sort_data(self):
         return sorted(
@@ -61,32 +36,21 @@ class Control(object):
                 key=lambda x: x.getTimestamps()['start']
             )
 
-    def to_write(self, filename):
-        self.writer.write(filename, self.convertData())
+    def to_write(self, filename, data):
+        pass
+        # self.writer.write(filename, self.convertData())
 
-    def convertData(self):
-        indx = 1
-        string_script = ""
-        for objLine in self.data:
-            string_script += "{0}\n{1}\n{2}\n\n".format(
-                indx,
-                self.__get_timestamps(objLine),
-                self.__get_lines(objLine)
-            )
-            indx += 1
-        return string_script
-
-    def __get_timestamps(self, item):
-        return "{0} --> {1}".format(item.time_start, item.time_end)
-
-    def __get_lines(self, item):
-        return '\n'.join(item.dialog)
-
-
+    def convertData(self, data: list) -> str:
+        return self.writer.convertData(data)
 
 
 c = Control()
-c.setPath('25641/')
-c.read()
-print(c.convertData())
-c.to_write('final.srt')
+
+c.read('7809/CD1.srt')
+# print(c.convertData())
+# c.to_write('final.srt')
+#
+#
+c.read('7809')
+# print(c.convertData())
+# c.to_write('final.srt')

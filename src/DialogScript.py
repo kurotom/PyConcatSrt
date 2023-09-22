@@ -4,7 +4,7 @@ Class to convert data on object Dialog with data of dialogs of srt files.
 """
 
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 class Dialog(object):
@@ -23,14 +23,53 @@ class Dialog(object):
             self.dialog = list_dialog
 
     def getTimestamps(self) -> dict:
+        t = self.getDatetimes()
+        return {
+            'start': t['start'].timestamp(),
+            'end': t['end'].timestamp()
+        }
+
+    def getDatetimes(self) -> dict:
         return {
                 'start': datetime.strptime(
                             self.time_start, '%H:%M:%S,%f'
-                        ).timestamp(),
+                        ),
                 'end': datetime.strptime(
                             self.time_end, '%H:%M:%S,%f'
-                        ).timestamp()
+                        )
             }
+
+    def update_time(self, objDialog) -> object:
+        if isinstance(objDialog, Dialog):
+            def getDelta(time):
+                return timedelta(
+                    hours=time.hour,
+                    minutes=time.minute,
+                    seconds=time.second,
+                    microseconds=time.microsecond
+                )
+            other = objDialog.getDatetimes()
+            this = self.getDatetimes()
+
+            # print('-->', other['start'].time(), other['end'].time())
+            # print('-->', this['start'].time(), this['end'].time())
+
+            diff_time = this['end'] - this['start']
+            date_diff = datetime.strptime(
+                        str(diff_time).replace('.', ','),
+                        '%H:%M:%S,%f'
+                    )
+            new_start = (other['end'] + getDelta(date_diff))
+            new_end = (new_start + getDelta(date_diff))
+            new_start_time = new_start.time()
+            new_end_time = new_end.time()
+            self.time_start = str(new_start_time).replace('.', ',')[:12]
+            self.time_end = str(new_end_time).replace('.', ',')[:12]
+
+            return self
+
+
+
 
     def __str__(self):
         return "{0} - {1}, {2} => {3}".format(
