@@ -8,12 +8,23 @@ import re
 import os
 from datetime import datetime
 from typing import Union, List, Dict
+# from ErrorClass import ErrorData
 
 from DialogScript import Dialog
 
 
 class ReaderSrt(object):
-    def __init__(self, path: str = None, discs: int = 1):
+    def __init__(
+                    self,
+                    path: str = None,
+                    discs: int = 1,
+                    errodata: object = None
+                ):
+        # if errodata is not None:
+        #     self.errorData = errodata
+        # else:
+        #     self.errorData = ErrorData()
+
         self.path = path
         self.lines = []
         self.current = 0
@@ -24,49 +35,75 @@ class ReaderSrt(object):
             'last_start': None,
             'last_end': None
         }
+        self.files_error = []
 
     def process(self) -> List[dict]:
-        result = []
-        if os.path.isfile(self.path):
-            if os.path.exists(self.path):
-                result_lines = self.__read_file(self.path)
-                lines_objs = self.__iterate_lines(result_lines['data'])
-                data = {
-                    'file': result_lines['file'],
-                    'data': lines_objs['data'],
-                    'errors': lines_objs['error']
-                }
-                result.append(data)
+        if os.path.exists(self.path):
+            return self.__inner_process()
+        else:
+            raise FileNotFoundError('File or directory not exists')
 
-        elif os.path.isdir(self.path):
-            if os.path.exists(self.path):
-                result_lines = self.__read_files(self.path)
-
-                if self.discs == 1:
-                    for item in result_lines:
-                        lines_objs = self.__iterate_lines(item['data'])
-                        data = {
-                            'file': item['file'],
-                            'data': lines_objs['data'],
-                            'errors': lines_objs['error']
-                        }
-                        result.append(data)
-                elif self.discs == 2:
-                    disc1 = self.__iterate_lines(result_lines[0]['data'])
-                    disc2 = self.__iterate_lines(result_lines[1]['data'])
-
-                    last_entry = disc1['data'][-1]
-                    list_updated = self.__update_timestamp(
-                                                disc2['data'],
-                                                last_entry
-                                            )
-                    disc1 += list_updated
-                    data = {
-                        'file': item['file'],
-                        'data': disc1,
-                        'errors': lines_objs['error']
+    def __inner_process(self) -> List[dict]:
+        def format_data(filename, data, errors):
+            return {
+                        'file': filename,
+                        'data': data,
+                        'error': errors
                     }
 
+        result = []
+        data = {}
+        if os.path.isfile(self.path):
+            result_lines = self.__read_file(self.path)
+            lines_objs = self.__iterate_lines(result_lines['data'])
+
+            data = format_data(
+                result_lines['file'],
+                lines_objs['data'],
+                lines_objs['error']
+            )
+
+            result.append(data)
+
+        elif os.path.isdir(self.path):
+            result_lines = self.__read_files(self.path)
+            if self.discs == 1:
+                for item in result_lines:
+                    lines_objs = self.__iterate_lines(item['data'])
+
+                    self.files_error.append(lines_objs['error'])
+                    data = format_data(
+                            item['file'],
+                            lines_objs['data'],
+                            lines_objs['error']
+                        )
+                result.append(data)
+
+            elif self.discs == 2:
+                disc1 = self.__iterate_lines(result_lines[0]['data'])
+                disc2 = self.__iterate_lines(result_lines[1]['data'])
+
+                self.files_error.append(disc1['error'])
+                self.files_error.append(disc2['error'])
+
+                last_entry = disc1['data'][-1]
+                list_updated = self.__update_timestamp(
+                                            disc2['data'],
+                                            last_entry
+                                        )
+                data_disc1 = format_data(
+                                result_lines[0]['file'],
+                                disc1['data'],
+                                disc1['error']
+                            )
+                data_disc2 = format_data(
+                                result_lines[1]['file'],
+                                list_updated,
+                                disc2['error']
+                            )
+
+                result.append(data_disc1)
+                result.append(data_disc2)
 
         return result
 
@@ -76,9 +113,7 @@ class ReaderSrt(object):
             last_entry = item.update_time(last_entry)
         return list_Dialog
 
-
-
-    def __iterate_lines(self, data: list) -> dict:
+    def __iterate_lines(self, data: list) -> Dict[list, list]:
         list_dialogsOBJ = []
         error_list = []
         total_lines = len(data)
@@ -111,18 +146,17 @@ class ReaderSrt(object):
             'error': error_list
         }
 
-    def __sort_timestamp(self, listLineObj: list):
+    def __sort_timestamp(self, listLineObj: list) -> list:
         return sorted(
                 listLineObj,
                 key=lambda x: x.getTimestamps()['start']
             )
 
-
     def __getEncoding(self, filename) -> dict:
         with open(filename, 'rb') as file:
             return chardet.detect(file.read())
 
-    def __read(self, filename, encoding):
+    def __read(self, filename, encoding) -> list:
         with open(filename, 'r', encoding=encoding) as file:
             return file.readlines()
 
@@ -136,10 +170,9 @@ class ReaderSrt(object):
 
     def __read_files(self, filename) -> list:
         result = []
-        files = os.listdir(filename)
+        files = sorted(os.listdir(filename))
         for item in files:
             file_path = self.path + f'/{item}'
-            print(file_path)
             if os.path.exists(file_path):
                 file_encoding = self.__getEncoding(file_path)['encoding']
                 data = {
@@ -149,7 +182,6 @@ class ReaderSrt(object):
                 result.append(data)
         return result
 
-
     def __getIndex(self, current_index, data: list) -> int:
         indx = data[current_index - 1].strip()
         if indx.isnumeric():
@@ -157,7 +189,7 @@ class ReaderSrt(object):
         else:
             return -1
 
-    def __getLines(self, current_index, data: list):
+    def __getLines(self, current_index, data: list) -> list:
         list_dialog = []
         for i in range(current_index, len(data)):
             if data[i].strip() != "":
@@ -189,11 +221,16 @@ class ReaderSrt(object):
             print('>>>  ', e)
             return False
 
-
-# # FILE
-# r1 = ReaderSrt('7809/CD1.srt', discs=1)
-# r1.process()
-#
-# # DIRECTORY
-r2 = ReaderSrt(path='7809', discs=2)
-r2.process()
+# # # FILE
+# r1 = ReaderSrt('tests/7809/CD1.srt', discs=1)
+# p = r1.process()
+# print(len(p))
+# for i in p:
+#     print(i.keys())
+# #
+# # # DIRECTORY
+# r2 = ReaderSrt(path='tests/7809', discs=2)
+# p = r2.process()
+# print(len(p), type(p))
+# for i in p:
+#     print(i.keys())

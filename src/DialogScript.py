@@ -5,31 +5,35 @@ Class to convert data on object Dialog with data of dialogs of srt files.
 
 
 from datetime import datetime, timedelta
+from typing import NewType, Dict, List
+
+
+dialog = NewType('Dialog', object)
 
 
 class Dialog(object):
-    def __init__(self, time_start, time_end):
+    def __init__(self, time_start: str, time_end: str):
         self.line = -1
         self.time_start = time_start
         self.time_end = time_end
         self.dialog = []
 
-    def setPosition(self, line: int):
+    def setPosition(self, line: List[int]) -> None:
         if line > 0:
             self.line = line
 
-    def setDialogs(self, list_dialog: list):
+    def setDialogs(self, list_dialog: List[str]) -> None:
         if list_dialog != []:
             self.dialog = list_dialog
 
-    def getTimestamps(self) -> dict:
+    def getTimestamps(self) -> Dict[datetime.timestamp, datetime.timestamp]:
         t = self.getDatetimes()
         return {
             'start': t['start'].timestamp(),
             'end': t['end'].timestamp()
         }
 
-    def getDatetimes(self) -> dict:
+    def getDatetimes(self) -> Dict[datetime, datetime]:
         return {
                 'start': datetime.strptime(
                             self.time_start, '%H:%M:%S,%f'
@@ -39,7 +43,7 @@ class Dialog(object):
                         )
             }
 
-    def update_time(self, objDialog) -> object:
+    def update_time(self, objDialog) -> dialog:
         if isinstance(objDialog, Dialog):
             def getDelta(time):
                 return timedelta(
@@ -68,13 +72,11 @@ class Dialog(object):
 
             return self
 
-
-
-
-    def __str__(self):
+    def __str__(self) -> str:
+        print(self.time_start, self.time_end)
         return "{0} - {1}, {2} => {3}".format(
                 self.line,
-                self.time_start,
-                self.time_end,
+                "-",
+                "-",
                 ' '.join(self.dialog)[:10]
             )
