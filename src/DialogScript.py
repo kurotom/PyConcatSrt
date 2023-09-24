@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Class to convert data on object Dialog with data of dialogs of srt files.
+Class to convert data into a Dialog object such as the start and end time of
+the dialog, the dialog lines, the location of the original srt file.
 """
 
 

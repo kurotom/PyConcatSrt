@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """
+Class in charge of giving SRT format to Dialog objects and writing them to a
+final SRT file.
 """
 
 

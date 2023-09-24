@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+Class in charge of controlling the information workflow between ReaderSrt,
+WriterSrt, ErrorData.
 """
 
 from ReaderFileSrt import ReaderSrt
 from WriterFileSrt import WriterSrt
 from ErrorClass import ErrorData
-import os
 
 
 class Control(object):
@@ -16,25 +17,12 @@ class Control(object):
         self.writer = WriterSrt()
         self.errorData = ErrorData()
 
-    def setPath(self, path) -> None:
-        if os.path.exists(path):
-            self.path = os.path.realpath(path)
-
     def read(self, path: str = None, discs: int = 1) -> list:
         if path is not None:
             try:
                 reader = ReaderSrt(path, discs, self.errorData)
-                #
-                # Si uso solo 'data' para que retornar un diccionario
-                # de ReaderSrt.process()  ??????????
                 result_data = reader.process()
-                size_data = len(result_data)
-                if size_data == 1:
-                    return self.__sort_data(result_data[0]['data'])
-                elif size_data == 2:
-                    new = result_data[0]['data'] + result_data[1]['data']
-                    return self.__sort_data(new)
-
+                return result_data
             except FileNotFoundError as e:
                 return e
 
@@ -65,20 +53,31 @@ class Control(object):
         return self.writer.convertData(data)
 
 
-c = Control()
-
-r = c.read('tests/7809/CD1.srt')
-# print(type(r), len(r))
-d = c.convertData(r)
-c.to_write('single_file.srt', d, writeLog=True)
-
-r = c.read('tests/7809')
-# print(type(r), len(r))
-d = c.convertData(r)
-c.to_write('multi_file_disc_1.srt', d, writeLog=True)
+# c = Control()
 #
-r = c.read('tests/7809', 2)
+# r = c.read('tests/7809/CD1.srt')
 # print(type(r), len(r))
-d = c.convertData(r)
-c.to_write('multi_file_disc_2', d, writeLog=True)
-print(c.errorData)
+# d = c.convertData(r)
+# c.to_write('single_file.srt', d, writeLog=True)
+#
+# r = c.read('tests/7809')
+# print(type(r), len(r))
+# d = c.convertData(r)
+# c.to_write('multi_file_disc_1.srt', d, writeLog=True)
+# #
+# r = c.read('tests/7809', 2)
+# print(type(r), len(r))
+# d = c.convertData(r)
+# c.to_write('multi_file_disc_2', d, writeLog=True)
+# # print(c.errorData)
+#
+#
+# r = c.read('tests/srts/sample1.srt')
+# print(type(r), len(r))
+# d = c.convertData(r)
+# c.to_write('single_file.srt', d, writeLog=True)
+#
+# r = c.read('tests/srts/')
+# print(type(r), len(r))
+# d = c.convertData(r)
+# c.to_write('multi_file_disc_1.srt', d, writeLog=True)
