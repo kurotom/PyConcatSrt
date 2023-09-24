@@ -76,7 +76,7 @@ class Dialog(object):
         print(self.time_start, self.time_end)
         return "{0} - {1}, {2} => {3}".format(
                 self.line,
-                "-",
-                "-",
+                self.time_start,
+                self.time_end,
                 ' '.join(self.dialog)[:10]
             )

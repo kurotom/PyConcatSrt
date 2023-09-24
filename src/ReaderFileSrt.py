@@ -8,7 +8,7 @@ import re
 import os
 from datetime import datetime
 from typing import Union, List, Dict
-# from ErrorClass import ErrorData
+from ErrorClass import ErrorData
 
 from DialogScript import Dialog
 
@@ -20,10 +20,10 @@ class ReaderSrt(object):
                     discs: int = 1,
                     errodata: object = None
                 ):
-        # if errodata is not None:
-        #     self.errorData = errodata
-        # else:
-        #     self.errorData = ErrorData()
+        if errodata is not None:
+            self.errorData = errodata
+        else:
+            self.errorData = ErrorData()
 
         self.path = path
         self.lines = []
@@ -44,11 +44,10 @@ class ReaderSrt(object):
             raise FileNotFoundError('File or directory not exists')
 
     def __inner_process(self) -> List[dict]:
-        def format_data(filename, data, errors):
+        def format_data(filename, data):
             return {
                         'file': filename,
-                        'data': data,
-                        'error': errors
+                        'data': data
                     }
 
         result = []
@@ -57,10 +56,11 @@ class ReaderSrt(object):
             result_lines = self.__read_file(self.path)
             lines_objs = self.__iterate_lines(result_lines['data'])
 
+            self.errorData.register(result_lines['file'], lines_objs['error'])
+
             data = format_data(
                 result_lines['file'],
-                lines_objs['data'],
-                lines_objs['error']
+                lines_objs['data']
             )
 
             result.append(data)
@@ -71,35 +71,40 @@ class ReaderSrt(object):
                 for item in result_lines:
                     lines_objs = self.__iterate_lines(item['data'])
 
-                    self.files_error.append(lines_objs['error'])
+                    self.errorData.register(item['file'], lines_objs['error'])
+
                     data = format_data(
                             item['file'],
-                            lines_objs['data'],
-                            lines_objs['error']
+                            lines_objs['data']
                         )
-                result.append(data)
+                    result.append(data)
 
             elif self.discs == 2:
                 disc1 = self.__iterate_lines(result_lines[0]['data'])
                 disc2 = self.__iterate_lines(result_lines[1]['data'])
 
-                self.files_error.append(disc1['error'])
-                self.files_error.append(disc2['error'])
+                self.errorData.register(
+                                result_lines[0]['file'],
+                                disc1['error']
+                            )
+                self.errorData.register(
+                                result_lines[1]['file'],
+                                disc2['error']
+                            )
 
                 last_entry = disc1['data'][-1]
                 list_updated = self.__update_timestamp(
                                             disc2['data'],
                                             last_entry
                                         )
+
                 data_disc1 = format_data(
                                 result_lines[0]['file'],
-                                disc1['data'],
-                                disc1['error']
+                                disc1['data']
                             )
                 data_disc2 = format_data(
                                 result_lines[1]['file'],
-                                list_updated,
-                                disc2['error']
+                                list_updated
                             )
 
                 result.append(data_disc1)
@@ -220,17 +225,3 @@ class ReaderSrt(object):
         except ValueError as e:
             print('>>>  ', e)
             return False
-
-# # # FILE
-# r1 = ReaderSrt('tests/7809/CD1.srt', discs=1)
-# p = r1.process()
-# print(len(p))
-# for i in p:
-#     print(i.keys())
-# #
-# # # DIRECTORY
-# r2 = ReaderSrt(path='tests/7809', discs=2)
-# p = r2.process()
-# print(len(p), type(p))
-# for i in p:
-#     print(i.keys())
