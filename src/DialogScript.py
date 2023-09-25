@@ -74,7 +74,6 @@ class Dialog(object):
             return self
 
     def __str__(self) -> str:
-        print(self.time_start, self.time_end)
         return "{0} - {1}, {2} => {3}".format(
                 self.line,
                 self.time_start,

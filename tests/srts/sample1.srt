@@ -1,0 +1,34 @@
+1
+00:00:00,498 --> 00:00:02,827
+- Here's what I love most
+about food and diet.
+
+2
+00:00:02,827 --> 00:00:06,383
+12:33 We all eat several times a day,
+and we're totally in charge
+
+
+3
+00:00:06,383 --> 00:00:09,427
+of what goes on our plate
+and what stays off.
+
+
+4
+00:00:011,383 --> 00:00:12,000
+
+
+5
+00:00:13,000 --> 00:00:14,000
+Texto
+otro
+
+6
+00:00:15,000 -->
+Un timestamp
+
+
+7
+00:00:11,000 --> 00:00:13,000
+Mal formato

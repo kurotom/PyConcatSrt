@@ -5,6 +5,7 @@ description = "Concatenate multiple srt files into one srt."
 authors = ["kurotom <55354389+kurotom@users.noreply.github.com>"]
 license = "GPL-3.0-or-later"
 readme = "README.md"
+packages = [{include = "src"}]
 
 [tool.poetry.dependencies]
 python = "^3.7"

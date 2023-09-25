@@ -8,11 +8,11 @@ import chardet
 
 import re
 import os
-from datetime import datetime
-from typing import Union, List, Dict
-from ErrorClass import ErrorData
+from typing import Union, List
 
-from DialogScript import Dialog
+from src.ErrorClass import ErrorData
+from src.DialogScript import Dialog
+from src.CheckerSrtFormat import CheckerSrt
 
 
 class ReaderSrt(object):
@@ -51,33 +51,36 @@ class ReaderSrt(object):
 
         elif os.path.isdir(self.path):
             result_lines = self.read_files(self.path)
-            if self.discs == 1:
-                for item in result_lines:
-                    current_filename = item['file']
-                    lines_objs = self.__iterate_lines(
-                                                current_filename,
-                                                item['data']
-                                            )
-                    result += lines_objs
+            if result_lines is None:
+                print(f'-->  Directory "{self.path}" does not have SRT files.')
+            else:
+                if self.discs == 1:
+                    for item in result_lines:
+                        current_filename = item['file']
+                        lines_objs = self.__iterate_lines(
+                                                    current_filename,
+                                                    item['data']
+                                                )
+                        result += lines_objs
 
-            elif self.discs == 2:
-                disc1 = self.__iterate_lines(
-                            filename=result_lines[0]['file'],
-                            data=result_lines[0]['data']
+                elif self.discs == 2:
+                    disc1 = self.__iterate_lines(
+                                filename=result_lines[0]['file'],
+                                data=result_lines[0]['data']
+                            )
+                    disc2 = self.__iterate_lines(
+                            filename=result_lines[1]['file'],
+                            data=result_lines[1]['data']
                         )
-                disc2 = self.__iterate_lines(
-                        filename=result_lines[1]['file'],
-                        data=result_lines[1]['data']
-                    )
 
-                last_entry = disc1[-1]
-                list_updated = self.__update_timestamp(
-                                            disc2,
-                                            last_entry
-                                        )
+                    last_entry = disc1[-1]
+                    list_updated = self.__update_timestamp(
+                                                disc2,
+                                                last_entry
+                                            )
 
-                result += disc1
-                result += list_updated
+                    result += disc1
+                    result += list_updated
 
         return result
 
@@ -94,27 +97,27 @@ class ReaderSrt(object):
         for i in range(total_lines):
             line = data[i]
             if '-->' in line:
-                regex = self.__get_timestamps(line)
+                regex = self.get_timestamps(line)
                 if regex is None:
-                    error_list.append(self.__getIndex(i, data))
+                    error_list.append(self.getIndex(i, data))
                 elif regex != []:
-                    time_tuple = regex[0]
-                    if self.__validate_timestamp(time_tuple):
-                        self.current = self.__getIndex(i, data)
+                    time_list = regex[0]
+                    if CheckerSrt.validate_timestamp(time_list):
+                        self.current = self.getIndex(i, data)
 
-                        lineDialogs = self.__getLines(i + 1, data)
+                        lineDialogs = self.getLines(i + 1, data)
                         if lineDialogs != []:
                             scriptOBJ = Dialog(
-                                        time_start=time_tuple[0],
-                                        time_end=time_tuple[1]
+                                        time_start=time_list[0],
+                                        time_end=time_list[1]
                                     )
-                            scriptOBJ.setPosition(self.__getIndex(i, data))
+                            scriptOBJ.setPosition(self.getIndex(i, data))
                             scriptOBJ.setDialogs(lineDialogs)
                             list_dialogsOBJ.append(scriptOBJ)
                         else:
                             self.errorData.registerIndex(
                                             filename,
-                                            self.__getIndex(i, data)
+                                            self.getIndex(i, data)
                                         )
                             self.errorData.registerLine(
                                             filename,
@@ -123,7 +126,7 @@ class ReaderSrt(object):
                     else:
                         self.errorData.registerIndex(
                                         filename,
-                                        self.__getIndex(i, data)
+                                        self.getIndex(i, data)
                                     )
                         self.errorData.registerLine(
                                         filename,
@@ -154,28 +157,32 @@ class ReaderSrt(object):
         }
         return data
 
-    def read_files(self, filename) -> list:
+    def read_files(self, filename) -> Union[list, None]:
         result = []
         files = sorted(os.listdir(filename))
-        for item in files:
-            file_path = self.path + f'/{item}'
-            if os.path.exists(file_path):
-                file_encoding = self.getEncoding(file_path)['encoding']
-                data = {
-                    'file': item,
-                    'data': self.__read(file_path, file_encoding)
-                }
-                result.append(data)
-        return result
+        files = [i for i in files if i.endswith('.srt')]
+        if len(files) > 0:
+            for item in files:
+                file_path = self.path + f'/{item}'
+                if os.path.exists(file_path):
+                    file_encoding = self.getEncoding(file_path)['encoding']
+                    data = {
+                        'file': item,
+                        'data': self.__read(file_path, file_encoding)
+                    }
+                    result.append(data)
+            return result
+        else:
+            return None
 
-    def __getIndex(self, current_index, data: list) -> int:
+    def getIndex(self, current_index, data: list) -> int:
         indx = data[current_index - 1].strip()
         if indx.isnumeric():
             return int(indx)
         else:
             return -1
 
-    def __getLines(self, current_index, data: list) -> list:
+    def getLines(self, current_index, data: list) -> list:
         list_dialog = []
         for i in range(current_index, len(data)):
             if data[i].strip() != "":
@@ -184,25 +191,10 @@ class ReaderSrt(object):
                 break
         return list_dialog
 
-    def __get_timestamps(self, line) -> Union[list, None]:
+    def get_timestamps(self, line) -> Union[list, None]:
         reg = r'(\d+:\d{2}:\d{2}\,\d{3}) --> (\d+:\d{2}:\d{2}\,\d{3})'
         regex = re.findall(reg, line)
         if regex != []:
             return regex
         else:
             return None
-
-    def __validate_timestamp(self, timestamps: list) -> bool:
-        def format(timestamp):
-            return timestamp + (15 - len(timestamp)) * '0'
-
-        start = format(timestamps[0])
-        end = format(timestamps[1])
-
-        try:
-            d1 = datetime.strptime(start, '%H:%M:%S,%f').timestamp()
-            d2 = datetime.strptime(end, '%H:%M:%S,%f').timestamp()
-            return d2 > d1
-        except ValueError as e:
-            print('>>>  ', e)
-            return False
