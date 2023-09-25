@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Run command line interface of PyConcatenateSRT.
+Run command line interface of PyConcatSRT.
 """
 
 import os
