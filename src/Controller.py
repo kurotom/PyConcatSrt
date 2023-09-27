@@ -8,16 +8,25 @@ from src.ReaderFileSrt import ReaderSrt
 from src.WriterFileSrt import WriterSrt
 from src.ErrorClass import ErrorData
 
+from typing import Union
+
 
 class Control(object):
 
     def __init__(self):
+        """
+        Constructor
+        """
         self.path = None
         self.errors_data = []
         self.writer = WriterSrt()
         self.errorData = ErrorData()
 
     def read(self, path: str = None, discs: int = 1) -> list:
+        """
+        Sends `path` to ReaderSrt and returns the processed data sorted by
+        start time.
+        """
         if path is not None:
             try:
                 reader = ReaderSrt(path, discs, self.errorData)
@@ -26,28 +35,33 @@ class Control(object):
             except FileNotFoundError as e:
                 return e
 
-    def __sort_data(self, data) -> list:
-        return sorted(
-                data,
-                key=lambda x: x.getTimestamps()['start']
-            )
-
     def to_write(
                     self,
                     filename: str,
                     data: str = None,
                     writeLog: bool = False
-                ) -> None:
-        if not filename.endswith('.srt'):
-            filename = filename + '.srt'
-
-        if data is None:
-            self.writer.write(filename, self.convertData())
-        else:
-            if isinstance(data, str):
-                self.writer.write(filename, data)
+                ) -> Union[bool, None]:
+        """
+        Writes "data" if not empty, optionally writes the generated error log.
+        """
         if writeLog:
             self.errorData.writeLog()
+        if data != "" and data is not None:
+            if not filename.endswith('.srt'):
+                filename = filename + '.srt'
+            self.writer.write(filename, data)
+            return True
+        else:
+            print('>> The data is empty. File has not been written.\n')
+            return None
 
-    def convertData(self, data: list = None) -> str:
-        return self.writer.convertData(data)
+    def convertData(self, data: list = None) -> Union[str, None]:
+        """
+        Converts the list of `Dialog` objects to SRT format and returns it
+        in `str`.
+        """
+        if data != "":
+            return self.writer.convertData(data)
+        else:
+            print('>> The data is empty.\n')
+            return None

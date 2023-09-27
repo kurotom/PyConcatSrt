@@ -22,6 +22,9 @@ class ReaderSrt(object):
                     discs: int = 1,
                     errordata: object = None
                 ):
+        """
+        Constructor
+        """
         if errordata is not None:
             self.errorData = errordata
         else:
@@ -32,12 +35,20 @@ class ReaderSrt(object):
         self.discs = discs
 
     def process(self) -> List[dict]:
+        """
+        Checks if the path exists and initializes the SRT file(s) workflow.
+        Returns list of `Dialog` objects.
+        """
         if os.path.exists(self.path):
             return self.__inner_process()
         else:
-            raise FileNotFoundError('File or directory not exists')
+            raise FileNotFoundError('File or directory not exists.')
 
     def __inner_process(self) -> List[dict]:
+        """
+        Core method of `process()`, checks if file or directory, returns list
+        of `Dialog` objects.
+        """
         result = []
         if os.path.isfile(self.path):
             result_lines = self.read_file(self.path)
@@ -73,24 +84,35 @@ class ReaderSrt(object):
                             data=result_lines[1]['data']
                         )
 
-                    last_entry = disc1[-1]
-                    list_updated = self.__update_timestamp(
-                                                disc2,
-                                                last_entry
-                                            )
+                    if disc1 != [] and disc2 != []:
+                        last_entry = disc1[-1]
+                        list_updated = self.__update_timestamp(
+                                                    disc2,
+                                                    last_entry
+                                                )
 
-                    result += disc1
-                    result += list_updated
+                        result += disc1
+                        result += list_updated
+                    elif disc2 != []:
+                        result += disc2
 
         return result
 
     def __update_timestamp(self, list_Dialog, objLastDialog) -> list:
+        """
+        Iterates list and update times start and end of object `Dialog`, return
+        list of object `Dialog`.
+        """
         last_entry = objLastDialog
         for item in list_Dialog:
             last_entry = item.update_time(last_entry)
         return list_Dialog
 
     def __iterate_lines(self, filename: str, data: list) -> List[Dialog]:
+        """
+        Iterates the list elements and returns the list from the `Dialog`,
+        logs errors in `ErrorData`.
+        """
         list_dialogsOBJ = []
         error_list = []
         total_lines = len(data)
@@ -136,20 +158,32 @@ class ReaderSrt(object):
         return self.__sort_timestamp(list_dialogsOBJ)
 
     def __sort_timestamp(self, listLineObj: list) -> list:
+        """
+        Returns the list of `Dialog` objects sorted by start timestamp.
+        """
         return sorted(
                 listLineObj,
                 key=lambda x: x.getTimestamps()['start']
             )
 
     def getEncoding(self, filename) -> dict:
+        """
+        Return encoding from file SRT.
+        """
         with open(filename, 'rb') as file:
             return chardet.detect(file.read())
 
     def __read(self, filename, encoding) -> list:
+        """
+        Read method and return all lines from file.
+        """
         with open(filename, 'r', encoding=encoding) as file:
             return file.readlines()
 
     def read_file(self, filename) -> dict:
+        """
+        Read file SRT.
+        """
         file_encoding = self.getEncoding(filename)['encoding']
         data = {
             'file': os.path.basename(filename),
@@ -158,11 +192,16 @@ class ReaderSrt(object):
         return data
 
     def read_files(self, filename) -> Union[list, None]:
+        """
+        Read files from the given directory, alphanumeric order,
+        SRT files only.
+        Maximum 2 discs, 2 files SRT.
+        """
         result = []
         files = sorted(os.listdir(filename))
         files = [i for i in files if i.endswith('.srt')]
         if len(files) > 0:
-            for item in files:
+            for item in files[:2]:
                 file_path = self.path + f'/{item}'
                 if os.path.exists(file_path):
                     file_encoding = self.getEncoding(file_path)['encoding']
@@ -176,6 +215,9 @@ class ReaderSrt(object):
             return None
 
     def getIndex(self, current_index, data: list) -> int:
+        """
+        Return index SRT from file.
+        """
         indx = data[current_index - 1].strip()
         if indx.isnumeric():
             return int(indx)
@@ -183,6 +225,9 @@ class ReaderSrt(object):
             return -1
 
     def getLines(self, current_index, data: list) -> list:
+        """
+        Returns list of strings of dialog lines from the SRT file.
+        """
         list_dialog = []
         for i in range(current_index, len(data)):
             if data[i].strip() != "":
@@ -192,6 +237,10 @@ class ReaderSrt(object):
         return list_dialog
 
     def get_timestamps(self, line) -> Union[list, None]:
+        """
+        Return times from SRT file, using Regex to get its.
+        Return list of strings `['time_start', 'time_end']` or None.
+        """
         reg = r'(\d+:\d{2}:\d{2}\,\d{3}) --> (\d+:\d{2}:\d{2}\,\d{3})'
         regex = re.findall(reg, line)
         if regex != []:

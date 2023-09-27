@@ -11,9 +11,11 @@ import os
 
 class ErrorData(object):
 
-    id_file = 0
-
     def __init__(self):
+        """
+        Constructor
+        """
+        self.id_file = 0
         self.files = {}
         self.data = []
         self.line_error = []
@@ -21,16 +23,23 @@ class ErrorData(object):
         self.file_error_log = 'Error_lines.log'
 
     def getDataError(self, name) -> int:
+        """
+        Establishes a file and an id linked to a list to save generated errors.
+        Returns the index of the list.
+        """
         if name not in list(self.files.keys()):
-            self.files[name] = ErrorData.id_file
+            self.files[name] = self.id_file
             self.data.append([])
             self.line_error.append([])
-            ErrorData.id_file += 1
+            self.id_file += 1
             return self.files[name]
         else:
             return self.files[name]
 
     def registerIndex(self, filename: str, error: list | int = None) -> bool:
+        """
+        Records the index of the SRT file of the generated error.
+        """
         id_error_list = self.getDataError(filename)
         if error is not None:
             if isinstance(error, list):
@@ -45,6 +54,9 @@ class ErrorData(object):
                 return False
 
     def registerLine(self, filename: str, error: list | int = None) -> bool:
+        """
+        Records the line index of the SRT file of the generated error.
+        """
         id_list = self.getDataError(filename)
         if error is not None:
             if isinstance(error, list):
@@ -59,6 +71,9 @@ class ErrorData(object):
                 return False
 
     def writeLog(self) -> None:
+        """
+        Write the error log file.
+        """
         def showErrors(message: str) -> str:
             date = datetime.now()
             message = '\n' + '=' * 30 + "\n" + f"{date}\n\n"
@@ -82,4 +97,7 @@ class ErrorData(object):
                 file.write(msg)
 
     def __str__(self):
+        """
+        Returns a `str` representation of the `ErrorData` object.
+        """
         return f'files: {list(self.files.keys())}, line_errors: {self.data}'

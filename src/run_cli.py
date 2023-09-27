@@ -9,6 +9,8 @@ import argparse
 
 
 def main():
+    sys.path.append('.')
+
     parser = argparse.ArgumentParser(
                     prog='run.py',
                     description='Concatenate SRT files.',
@@ -75,5 +77,5 @@ def main():
 
 
 if __name__ == '__main__':
-    sys.path.append('.')
+#    sys.path.append('.')
     main()
