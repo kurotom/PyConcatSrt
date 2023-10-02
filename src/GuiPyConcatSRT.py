@@ -14,7 +14,7 @@ from src.Controller import Control
 
 
 class Repo(object):
-    repo = 'www.google.com'
+    repo = 'https://github.com/kurotom/PyConcatSrt.git'
 
 
 class Colors(object):
@@ -291,7 +291,7 @@ class MenuBar(Gui):
                         text=Repo.repo,
                         frame=frame,
                         justify='center',
-                        font=('Arial', 11, 'bold'),
+                        font=('Arial', 10, 'bold'),
                         anchor='center'
                     )
 
