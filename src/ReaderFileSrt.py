@@ -34,7 +34,7 @@ class ReaderSrt(object):
         self.current = 0
         self.discs = discs
 
-    def process(self) -> List[dict]:
+    def process(self) -> List[Dialog]:
         """
         Checks if the path exists and initializes the SRT file(s) workflow.
         Returns list of `Dialog` objects.
@@ -44,7 +44,7 @@ class ReaderSrt(object):
         else:
             raise FileNotFoundError('File or directory not exists.')
 
-    def __inner_process(self) -> List[dict]:
+    def __inner_process(self) -> List[Dialog]:
         """
         Core method of `process()`, checks if file or directory, returns list
         of `Dialog` objects.

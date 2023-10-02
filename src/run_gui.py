@@ -7,7 +7,8 @@ import sys
 
 
 def main():
-    from src.GuiPyConcatSRT import 
+    from src.GuiPyConcatSRT import main
+    main()
 
 
 if __name__ == '__main__':

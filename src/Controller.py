@@ -22,15 +22,26 @@ class Control(object):
         self.writer = WriterSrt()
         self.errorData = ErrorData()
 
-    def read(self, path: str = None, discs: int = 1) -> list:
+    def read(self, path: str = None, paths: list = None, discs: int = 1) -> list:
         """
         Sends `path` to ReaderSrt and returns the processed data sorted by
         start time.
         """
+        result_data = []
         if path is not None:
             try:
                 reader = ReaderSrt(path, discs, self.errorData)
                 result_data = reader.process()
+                return result_data
+            except FileNotFoundError as e:
+                return e
+
+        elif paths is not None:
+            try:
+                result_data = []
+                for i in paths:
+                    r = ReaderSrt(i.name, discs, self.errorData)
+                    result_data += r.process()
                 return result_data
             except FileNotFoundError as e:
                 return e
@@ -45,7 +56,7 @@ class Control(object):
         Writes "data" if not empty, optionally writes the generated error log.
         """
         if writeLog:
-            self.errorData.writeLog()
+            self.write_log()
         if data != "" and data is not None:
             if not filename.endswith('.srt'):
                 filename = filename + '.srt'
@@ -54,6 +65,12 @@ class Control(object):
         else:
             print('>> The data is empty. File has not been written.\n')
             return None
+
+    def write_log(self):
+        """
+        Writes errors to the log file.
+        """
+        self.errorData.writeLog()
 
     def convertData(self, data: list = None) -> Union[str, None]:
         """
