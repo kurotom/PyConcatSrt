@@ -6,12 +6,21 @@ final SRT file.
 
 
 class WriterSrt(object):
+    """
+    Class to convert and write data in SRT format.
+    """
 
     def write(self, filename: str = None, data: str = None):
+        """
+        Write data.
+        """
         with open(filename, 'w') as file:
             file.write(data)
 
     def convertData(self, data: list) -> str:
+        """
+        Converts data from a list of object Dialog to SRT format.
+        """
         if data != []:
             indx = 1
             string_script = ""
@@ -27,7 +36,13 @@ class WriterSrt(object):
             return ''
 
     def __format_timestamp(self, item) -> str:
+        """
+        Formats start and end timestamps.
+        """
         return "{0} --> {1}".format(item.time_start, item.time_end)
 
     def __get_lines(self, item) -> str:
+        """
+        Formats dialogs lines.
+        """
         return '\n'.join(item.dialog)

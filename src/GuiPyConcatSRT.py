@@ -83,6 +83,9 @@ class Gui(object):
     filename = 'final.srt'
 
     def __init__(self, main: Tk, debug: bool = False) -> None:
+        """
+        Constructor
+        """
         self.debug = debug
         self.main = main
         self.control = Control()
@@ -144,7 +147,9 @@ class Gui(object):
         self.main.bind('<Escape>', self.menu_bar.close_destroy)
 
     def convert_start(self, event=None):
-        print(self.menu_bar.files, self.menu_bar.dir)
+        """
+        Event button and bind start converter files SRT
+        """
         if self.menu_bar.files is not None or self.menu_bar.dir is not None:
             file_name = self.entry_filename.get()
             data = self.control.read(paths=self.menu_bar.files)
@@ -158,9 +163,8 @@ class Gui(object):
                     title='Operation finished',
                     message='The operation has been completed successfully.'
                 )
-            else:
-                if self.checkLog:
-                    self.control.write_log()
+            if self.commitedOperation.get():
+                self.control.write_log()
         else:
             messagebox.showinfo(
                 title='Select Files/Directory',
@@ -169,8 +173,14 @@ class Gui(object):
 
 
 class MenuBar(Gui):
+    """
+    Class of Menu
+    """
 
     def __init__(self, frame, controller):
+        """
+        Constructor
+        """
         self.controller = controller
         self.frame = frame
         self.menu = None
@@ -180,6 +190,9 @@ class MenuBar(Gui):
         self.drawMenu()
 
     def drawMenu(self):
+        """
+        Build menu items.
+        """
         file_label = 'Open files'
         dir_label = 'Open directory'
 
@@ -200,14 +213,23 @@ class MenuBar(Gui):
         self.menu.add_cascade(label='Help', menu=helpMenu)
 
     def openfile(self, event=None):
+        """
+        Event to open SRT files.
+        """
         self.files = filedialog.askopenfiles(
                     filetypes=[("Files SRT", "*.srt")]
                 )
 
     def opendir(self, event=None):
+        """
+        Event to open directory with SRT files.
+        """
         self.dir = filedialog.askdirectory()
 
     def showHelp(self):
+        """
+        Show framework help.
+        """
         if self.current != []:
             self.close_destroy()
             self.current = []
@@ -253,6 +275,9 @@ class MenuBar(Gui):
             y_pos += 30
 
     def showAbout(self):
+        """
+        Displays a frame about the application.
+        """
         def msg():
             msg = 'PyConcatSrt is a tool to merge SRT files into one, '
             msg += 'respecting times with the correct format, logging errors.'
@@ -305,22 +330,37 @@ class MenuBar(Gui):
         cancel.place(x=100, y=159, width=100, height=20)
 
     def close_destroy(self, event=None):
+        """
+        Destroy the "help" and "about" frames.
+        """
         if self.current is not []:
             for item in self.current:
                 item.destroy()
             self.current = []
 
     def link_repo(self, event=None):
+        """
+        Open the link repository in your web browser.
+        """
         webbrowser.open(Repo.repo)
 
     def show_link(self, event=None):
+        """
+        Displays a link in a label below the link repository.
+        """
         self.label_show_link.place(x=0, y=120, relwidth=1, height=20)
 
     def destroy_show_link(self, event=None):
+        """
+        Hide the link repository.
+        """
         self.label_show_link.place(x=0, y=0, width=0, height=0)
 
 
 def main():
+    """
+    Constructs gui main app, and bind exit event.
+    """
     root = Tk()
     gui = Gui(root)
     root.bind('<Control-q>', lambda x: root.destroy())

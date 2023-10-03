@@ -16,6 +16,10 @@ from src.CheckerSrtFormat import CheckerSrt
 
 
 class ReaderSrt(object):
+    """
+    Class to read and process files SRT.
+    """
+
     def __init__(
                     self,
                     path: str = None,
