@@ -22,7 +22,12 @@ class Control(object):
         self.writer = WriterSrt()
         self.errorData = ErrorData()
 
-    def read(self, path: str = None, paths: list = None, discs: int = 1) -> list:
+    def read(
+                self,
+                path: str = None,
+                paths: list = None,
+                discs: int = 1
+            ) -> list:
         """
         Sends `path` to ReaderSrt and returns the processed data sorted by
         start time.
@@ -32,7 +37,7 @@ class Control(object):
             try:
                 reader = ReaderSrt(path, discs, self.errorData)
                 result_data = reader.process()
-                return result_data
+                return self.sort_by_timestamp(result_data)
             except FileNotFoundError as e:
                 return e
 
@@ -42,9 +47,18 @@ class Control(object):
                 for i in paths:
                     r = ReaderSrt(i.name, discs, self.errorData)
                     result_data += r.process()
-                return result_data
+                return self.sort_by_timestamp(result_data)
             except FileNotFoundError as e:
                 return e
+
+    def sort_by_timestamp(self, listLineObj: list) -> list:
+        """
+        Returns the list of `Dialog` objects sorted by start timestamp.
+        """
+        return sorted(
+                listLineObj,
+                key=lambda x: x.getTimestamps()['start']
+            )
 
     def to_write(
                     self,
