@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyconcatsrt"
-version = "0.1.2"
+version = "0.1.3"
 description = "Concatenate multiple srt files into one srt."
 authors = ["kurotom <55354389+kurotom@users.noreply.github.com>"]
 license = "GPL-3.0-or-later"

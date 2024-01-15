@@ -78,6 +78,7 @@ class ReaderSrt(object):
                                                 )
                         result += lines_objs
 
+                # Puede que esté demás
                 elif self.discs == 2:
                     disc1 = self.__iterate_lines(
                                 filename=result_lines[0]['file'],
@@ -138,7 +139,9 @@ class ReaderSrt(object):
                                         time_end=time_list[1]
                                     )
                             scriptOBJ.setPosition(self.getIndex(i, data))
-                            scriptOBJ.setDialogs(lineDialogs)
+                            scriptOBJ.setDialogs(
+                                    scriptOBJ.dialogFormat(lineDialogs)
+                                )
                             list_dialogsOBJ.append(scriptOBJ)
                         else:
                             self.errorData.registerIndex(

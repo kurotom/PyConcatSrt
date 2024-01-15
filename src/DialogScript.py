@@ -7,6 +7,7 @@ the dialog, the dialog lines, the location of the original srt file.
 
 from datetime import datetime, timedelta
 from typing import NewType, Dict, List
+import re
 
 
 dialog = NewType('Dialog', object)
@@ -72,6 +73,30 @@ class Dialog(object):
             self.time_end = str(new_end_time).replace('.', ',')[:12]
 
             return self
+
+    def dialogFormat(self, list_dialog: list) -> list:
+        """
+        Corrects the formatting of dialogs leaving each one on one line.
+        """
+        for line in list_dialog:
+            r = re.findall(r'(^-\s*.*?[.!?])\s*-\s*(.*)', line)
+            if r != []:
+
+                l1 = f"- {r[0][0].replace('-', '').strip()}\n"
+                l2 = f"- {r[0][1].replace('-', '').strip()}"
+
+                l1.replace('¡ ', '¡')
+                l1.replace(' !', '!')
+                l1.replace('¿ ', '¿')
+                l1.replace(' ?', '?')
+
+                l2.replace('¡ ', '¡')
+                l2.replace(' !', '!')
+                l2.replace('¿ ', '¿')
+                l2.replace(' ?', '?')
+                return [l1 + l2]
+            else:
+                return list_dialog
 
     def __str__(self) -> str:
         return "{0} - {1}, {2} => {3}".format(
